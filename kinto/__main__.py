@@ -11,13 +11,49 @@ from kinto import __version__
 from kinto.config import init
 
 CONFIG_FILE = 'config/kinto.ini'
+def startup(args,config_file):
+	#init 
+	initstep(args,config_file)
+	#migrate
+	migratestep(args,config_file)
 
+   
+def initstep(args,config_file):
+	backend = args['backend']
+        if not backend:
+            while True:
+                prompt = ("Select the backend you would like to use: "
+                          "(1 - postgresql, 2 - redis, default - memory) ")
+                answer = input(prompt).strip()
+                try:
+                    backends = {"1": "postgresql", "2": "redis", "": "memory"}
+                    backend = backends[answer]
+                    break
+                except KeyError:
+                    pass
+
+        init(config_file, backend)
+
+        # Install postgresql libraries if necessary
+        if backend == "postgresql":
+            try:
+                import psycopg2  # NOQA
+            except ImportError:
+                import pip
+                pip.main(['install', "cliquet[postgresql]"])
+
+def migratestep(args,config_file):
+	env = bootstrap(config_file)
+        cliquet.init_schema(env)
 
 def main(args=None):
     """The main routine."""
+    
     if args is None:
         args = sys.argv[1:]
-
+    print('hi')
+    print(args)
+    print('bye')
     parser = argparse.ArgumentParser(description="Kinto commands")
     parser.add_argument('--ini',
                         help='Application configuration file',
@@ -59,35 +95,14 @@ def main(args=None):
         if os.path.exists(config_file):
             print("%s already exist." % config_file, file=sys.stderr)
             sys.exit(1)
-
-        backend = args['backend']
-        if not backend:
-            while True:
-                prompt = ("Select the backend you would like to use: "
-                          "(1 - postgresql, 2 - redis, default - memory) ")
-                answer = input(prompt).strip()
-                try:
-                    backends = {"1": "postgresql", "2": "redis", "": "memory"}
-                    backend = backends[answer]
-                    break
-                except KeyError:
-                    pass
-
-        init(config_file, backend)
-
-        # Install postgresql libraries if necessary
-        if backend == "postgresql":
-            try:
-                import psycopg2  # NOQA
-            except ImportError:
-                import pip
-                pip.main(['install', "cliquet[postgresql]"])
+        initstep(args,config_file)
 
     elif args['which'] == 'migrate':
-        env = bootstrap(config_file)
-        cliquet.init_schema(env)
+        migratestep(args,config_file)
 
     elif args['which'] == 'start':
+	if not os.path.exists(config_file):
+		startup(args,config_file)
         pserve_argv = ['pserve', config_file]
         if args['reload']:
             pserve_argv.append('--reload')
