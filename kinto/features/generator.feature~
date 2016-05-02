@@ -1,0 +1,16 @@
+Feature: pyramid.route_path to build internal route_path
+
+Scenario: a bucket is POSTed to kinto
+    Given kinto init occured
+      And kinto migrate occured
+      And background kinto start
+     When a bucket is posted with python http
+     Then a bucket should be created
+
+Scenario: a bucket is GETten
+     When I request to get a bucket with python http
+     Then I get a bucket
+
+Scenario: a bucket is DELETEd
+     When I request a bucket is DELETEd with python http
+     Then The bucket is delete

@@ -1,0 +1,20 @@
+@given('nothing')
+def step_impl(context):
+    pass
+
+@given('kinto init occured')
+def step_impl(context):
+    pass
+
+@given('kinto migrate occured')
+def step_impl(context):
+    pass
+
+
+@when('kinto is started')
+def step_impl(context):
+    contect.responce=os.system("kinto start")
+
+@then('kinto should start')
+def step_impl(context):
+    asse

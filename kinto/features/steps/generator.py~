@@ -1,0 +1,111 @@
+import os
+@given('nothing')
+def step_impl(context):
+ 	pass
+
+@given('kinto init occured')
+def step_impl(context):
+    os.system('bash -c "sleep 2;xdotool key Return"&')
+    os.system("kinto init")
+
+
+@given('kinto migrate occured')
+def step_impl(context):
+    os.system("kinto migrate")
+
+
+
+@given('background kinto start')
+def step_impl(context):
+    os.system("kinto start&")
+
+@when('a record is posted with python http')
+def step_impl(context):
+    os.system("sleep 3; echo \'{\"data\": {\"foo\": \"bar\"}}\' | http POST http://localhost:8888/v1/buckets/blog/collections/articles/records --auth=\"token:bob-token\" --verbose > recordpost")
+
+@when('I request to get a record with python http')
+def step_impl(context):
+    os.system("http GET http://localhost:8888/v1/buckets/blog/collections/articles/records --auth=\"token:bob-token\" --verbose > recordget")
+
+@when('I request a record is DELETEd with python http')
+def step_impl(context):
+    
+    os.system("http DELETE http://localhost:8888/v1/buckets/blog/collections/articles/records --auth=\"token:bob-token\" --verbose > recorddelete")
+
+@when('a collection is posted with python http')
+def step_impl(context):
+    os.system("sleep 3; echo \'{\"data\": {\"id\": \"articles\"}}\' | http POST http://localhost:8888/v1/buckets/blog/collections --auth=\"token:bob-token\" --verbose > collectionpost")
+
+@when('I request to get a collection with python http')
+def step_impl(context):
+    os.system("http GET http://localhost:8888/v1/buckets/blog/collections --auth=\"token:bob-token\" --verbose > collectionget")
+
+@when('I request a collection is DELETEd with python http')
+def step_impl(context):
+    os.system("http DELETE http://localhost:8888/v1/buckets/blog/collections --auth=\"token:bob-token\" --verbose > collectiondelete")
+
+@when('a bucket is posted with python http')
+def step_impl(context):
+    os.system("sleep 3; echo \'{\"data\": {\"id\": \"blog\"}}\' | http POST http://localhost:8888/v1/buckets --auth=\"token:bob-token\" --verbose>bucketpost")
+
+@when('I request to get a bucket with python http')
+def step_impl(context):
+    os.system("http GET http://localhost:8888/v1/buckets --auth=\"token:bob-token\" --verbose>bucketget")
+
+@when('I request a bucket is DELETEd with python http')
+def step_impl(context):
+    os.system("http DELETE http://localhost:8888/v1/buckets --auth=\"token:bob-token\" --verbose>bucketdelete")
+
+@when('kinto is started')
+def step_impl(context):
+    os.system('bash -c "sleep 2;xdotool key Return;sleep 2;xdotool key Control+c;"&')
+    os.system("kinto start")
+
+
+
+
+@then('kinto should start')
+def step_impl(context):
+    if os.path.exists("./config/kinto.ini"):
+	os.system("rm ./config/kinto.ini")
+	pass
+    else:
+	assert True is False
+
+@then('a record should be created')
+def step_impl(context):
+    assert (os.stat('./recordpost').st_size!=0) and ('error' not in open('./recordpost').read()) is True
+
+@then('I get a record')
+def step_impl(context):
+    assert (os.stat('./recordget').st_size!=0) and ('error' not in open('./recordget').read()) is True
+
+@then('The record is delete')
+def step_impl(context):
+    assert (os.stat('./recorddelete').st_size!=0) and ('error' not in open('./recorddelete').read()) is True
+
+@then('a collection should be created')
+def step_impl(context):
+    assert (os.stat('./collectionpost').st_size!=0) and ('error' not in open('./collectionpost').read()) is True
+
+@then('I get a collection')
+def step_impl(context):
+    assert (os.stat('./collectionget').st_size!=0) and ('error' not in open('./collectionget').read()) is True
+
+@then('The collection is delete')
+def step_impl(context):
+    assert (os.stat('./collectiondelete').st_size!=0) and ('error' not in open('./collectiondelete').read()) is True
+
+@then('a bucket should be created')
+def step_impl(context):
+    assert (os.stat('./bucketpost').st_size!=0) and ('error' not in open('./bucketpost').read()) is True
+
+@then('I get a bucket')
+def step_impl(context):
+    assert (os.stat('./bucketget').st_size!=0) and ('error' not in open('./bucketget').read()) is True
+
+@then('The bucket is delete')
+def step_impl(context):
+    os.system("rm ./config/kinto.ini")
+    os.system("kill -9 $(ps aux | grep kinto | awk '{print $2}')")
+    assert (os.stat('./bucketdelete').st_size!=0) and ('error' not in open('./bucketdelete').read()) is True
