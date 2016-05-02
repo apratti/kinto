@@ -11,14 +11,11 @@ class GroupSchema(resource.ResourceSchema):
     members = colander.SchemaNode(colander.Sequence(),
                                   colander.SchemaNode(colander.String()))
 
-    class Options:
-        preserve_unknown = True
-
 
 @resource.register(name='group',
                    collection_path='/buckets/{{bucket_id}}/groups',
                    record_path='/buckets/{{bucket_id}}/groups/{{id}}')
-class Group(resource.ShareableResource):
+class Group(resource.ProtectedResource):
 
     mapping = GroupSchema()
 
@@ -28,8 +25,9 @@ class Group(resource.ShareableResource):
 
     def get_parent_id(self, request):
         bucket_id = request.matchdict['bucket_id']
-        parent_id = '/buckets/%s' % bucket_id
-        return parent_id
+        #parent_id = '/buckets/%s' % bucket_id
+        parent_id = request.route_path('bucket-record', id=bucket_id)[3:]
+	return parent_id
 
 
 @subscriber(ResourceChanged,

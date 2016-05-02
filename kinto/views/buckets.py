@@ -14,7 +14,7 @@ class BucketSchema(resource.ResourceSchema):
                    collection_methods=('GET', 'POST', 'DELETE'),
                    collection_path='/buckets',
                    record_path='/buckets/{{id}}')
-class Bucket(resource.ShareableResource):
+class Bucket(resource.ProtectedResource):
     mapping = BucketSchema()
     permissions = ('read', 'write', 'collection:create', 'group:create')
 
@@ -37,7 +37,7 @@ def on_buckets_deleted(event):
 
     for change in event.impacted_records:
         bucket = change['old']
-        parent_id = '/buckets/%s' % bucket['id']
+	parent_id = event.request.route_path('bucket-record', id=bucket['id'])[3:]
 
         # Delete groups.
         storage.delete_all(collection_id='group',
@@ -55,8 +55,8 @@ def on_buckets_deleted(event):
 
         # Delete records.
         for collection in deleted_collections:
-            parent_id = '/buckets/%s/collections/%s' % (bucket['id'],
-                                                        collection['id'])
+	    parent_id = event.request.route_path('collection-record', bucket_id=bucket['id'],id=collection['id'])[3:]
+
             storage.delete_all(collection_id='record',
                                parent_id=parent_id,
                                with_deleted=False)

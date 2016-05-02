@@ -39,7 +39,7 @@ class CollectionSchema(resource.ResourceSchema):
                    collection_methods=('GET', 'POST', 'DELETE'),
                    collection_path='/buckets/{{bucket_id}}/collections',
                    record_path='/buckets/{{bucket_id}}/collections/{{id}}')
-class Collection(resource.ShareableResource):
+class Collection(resource.ProtectedResource):
     mapping = CollectionSchema()
     permissions = ('read', 'write', 'record:create')
 
@@ -49,7 +49,8 @@ class Collection(resource.ShareableResource):
 
     def get_parent_id(self, request):
         bucket_id = request.matchdict['bucket_id']
-        parent_id = '/buckets/%s' % bucket_id
+        #parent_id = '/buckets/%s' % bucket_id
+	parent_id = request.route_path('bucket-record', id=bucket_id)[3:]
         return parent_id
 
 
@@ -63,8 +64,9 @@ def on_collections_deleted(event):
 
     for change in event.impacted_records:
         collection = change['old']
-        parent_id = '/buckets/%s/collections/%s' % (event.payload['bucket_id'],
-                                                    collection['id'])
+        #parent_id = '/buckets/%s/collections/%s' % (event.payload['bucket_id'],
+        #                                            collection['id'])
+	parent_id = event.request.route_path('collection-record', bucket_id=event.payload['bucket_id'],id=collection['id'])[3:]
         storage.delete_all(collection_id='record',
                            parent_id=parent_id,
                            with_deleted=False)
